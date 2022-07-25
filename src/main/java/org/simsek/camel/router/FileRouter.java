@@ -1,6 +1,8 @@
 package org.simsek.camel.router;
 
+import org.apache.camel.Body;
 import org.apache.camel.Exchange;
+import org.apache.camel.Header;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jackson.ListJacksonDataFormat;
 import org.simsek.camel.model.User;
@@ -14,7 +16,8 @@ public class FileRouter extends RouteBuilder {
         from("file:source").unmarshal(new ListJacksonDataFormat(User.class))
                 .split(body())
                 .process(new UserProcessor())
-                .bean(MyUserBean.class)
+                .filter().method("myUserBean", "isMiddleAge")
+                .bean(MyUserBean.class, "getUser")
                 .log("${body}");
     }
 }
@@ -24,5 +27,9 @@ class MyUserBean {
     public String getUser(Exchange exchange) {
         User user = (User) exchange.getIn().getBody();
         return user.toString();
+    }
+    public boolean isMiddleAge(Exchange exchange) {
+        User user = (User) exchange.getIn().getBody();
+        return user.getCategory().equals("MiddleAge");
     }
 }
